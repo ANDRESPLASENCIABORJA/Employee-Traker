@@ -1,0 +1,23 @@
+{
+  "name": "employee-traker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "employeeTraker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ANDRESPLASENCIABORJA/Employee-Traker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ANDRESPLASENCIABORJA/Employee-Traker/issues"
+  },
+  "homepage": "https://github.com/ANDRESPLASENCIABORJA/Employee-Traker#readme",
+  "dependencies": {
+    "inquirer": "^8.1.0",
+    "mysql": "^2.18.1"
+  }
+}
