@@ -127,21 +127,24 @@ const roleAuctionAdd = () => {
                 message: 'What is the new role salary?'
             },
             {
-                name: 'in which department does the role goes?',
-                type: 'input',
-                message: 'What is the new department name?'
+                name: 'roleDepartment',
+                type: 'list',
+                message: 'In which department does the new role goes?',
+                choices: [],
             },
         ])
         .then((answer) => {
             // When finished prompting, insert the new item into the db table
             connection.query(
-                'INSERT INTO department SET ?',
+                'INSERT INTO role SET ?',
                 {
-                    name: answer.departmentName,
+                    title: answer.roleTitle,
+                    salary: answer.roleSalary,
+                    depertment_id: answer.roleDepartment,
                 },
                 (err) => {
                     if (err) throw err;
-                    console.log('Your new department was successfully created');
+                    console.log('Your new role was successfully created');
                     // Prompt the starting questions to the user
                     start();
                 }
@@ -155,32 +158,37 @@ const employeeAuctionAdd = () => {
     inquirer
         .prompt([
             {
-                name: 'departmentName',
+                name: 'employeeFirstName',
                 type: 'input',
-                message: 'What is the new department name?'
+                message: 'What is the first name of your employee?'
             },
             {
-                name: 'departmentName',
+                name: 'employeeLastName',
                 type: 'input',
-                message: 'What is the new department name?'
+                message: 'What is the last name of your employee?'
             },
             {
-                name: 'departmentName',
-                type: 'input',
-                message: 'What is the new department name?'
+                name: 'employeeRole',
+                type: 'list',
+                message: 'What is the employees role?',
+                choices: [],
             },
             {
-                name: 'departmentName',
-                type: 'input',
-                message: 'What is the new department name?'
+                name: 'employeeManager',
+                type: 'list',
+                message: 'Who is the new employee manager?',
+                choices: [],
             },
         ])
         .then((answer) => {
             // When finished prompting, insert the new item into the db table
             connection.query(
-                'INSERT INTO department SET ?',
+                'INSERT INTO employee SET ?',
                 {
-                    name: answer.departmentName,
+                    first_name: answer.employeeFirstName,
+                    last_name: answer.employeeLastName,
+                    role_id: answer.employeeRole,
+                    manager_id: answer.employeeManager,
                 },
                 (err) => {
                     if (err) throw err;
@@ -194,7 +202,41 @@ const employeeAuctionAdd = () => {
 
 // Function to handle with the update EMPLOYEE ROLE choice
 const employeeAuctionUpdate = () => {
-
+    // Prompt to store information from the user
+    inquirer
+        .prompt([
+            {
+                name: 'updateEmployee',
+                type: 'list',
+                message: 'Please select the employee that you want to update',
+                choices: [],
+            },
+            {
+                name: 'employeeNewRole',
+                type: 'list',
+                message: 'Please select the new role for the employee',
+                choices: [],
+            },
+        ])
+        .then((answer) => {
+            // When finished prompting, insert the new item into the db table
+            connection.query(
+                'INSERT INTO employee SET ?',
+                {
+                    name: answer.updateEmployee,
+                },
+                'INSERT INTO role SET ?',
+                {
+                    title: answer.title,
+                },
+                (err) => {
+                    if (err) throw err;
+                    console.log('Your employees role was successfully updated');
+                    // Prompt the starting questions to the user
+                    start();
+                }
+            );
+        });
 };
 
 // Connect to the mysql server and sql database
