@@ -10,6 +10,7 @@ USE employeeTraker_DB;
 CREATE TABLE department(
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(30),
+  -- Unique identifier for each row, can be composed of multiple columns --
   PRIMARY KEY (id)
 );
 
@@ -18,7 +19,7 @@ CREATE TABLE role(
   id INT NOT NULL AUTO_INCREMENT,
   title VARCHAR(30),
   salary DECIMAL(10,2),
-  department_id INT default 0,
+  department_id VARCHAR(30),
   PRIMARY KEY (id)
 );
 
@@ -27,8 +28,10 @@ CREATE TABLE employee(
   id INT NOT NULL AUTO_INCREMENT,
   first_name VARCHAR(30),
   last_name VARCHAR(30),
-  role_id INT default 0,
-  manager_id INT default 0,
+  role_id  VARCHAR(30),
+  manager_id VARCHAR(30),
   PRIMARY KEY (id)
 );
+
+-- Foreign keys --
 
