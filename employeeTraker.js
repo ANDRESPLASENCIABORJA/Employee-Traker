@@ -12,7 +12,6 @@ const cTable = require('console.table');
 //let employees = []; // read from db, might have to transform the arrays
 //read roles and managers from database, assign to variables to be used for choices
 
-
 // Create a connection  information to sql employeeTraker_DB
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -160,8 +159,8 @@ const roleAuctionAdd = () => {
                     type: 'rawlist',
                     choices() {
                         let choiceArray = [];
-                        results.forEach(({ name }) => {
-                            choiceArray.push(name);
+                        results.forEach(({ name, id }) => {
+                            choiceArray.push({ name, value: id });
                         });
                         return choiceArray;
                     },
@@ -170,6 +169,7 @@ const roleAuctionAdd = () => {
             ])
             .then((answer) => {
                 // When finished prompting, insert the new item into the db table
+                // Handle with no departments problem and it has to go before all the questions
                 connection.query(
                     'INSERT INTO role SET ?',
                     {
@@ -190,101 +190,132 @@ const roleAuctionAdd = () => {
 
 // Function to handle with the add EMPLOYEE choice
 const employeeAuctionAdd = () => {
+
     //query the database for all items being auctioned
-    connection.query('SELECT * FROM role', (err, results) => {
+    connection.query('SELECT * FROM role', (err, roleResults) => {
         if (err) throw err;
-        // Prompt to store information from the user
-        inquirer
-            .prompt([
-                {
-                    name: 'employeeFirstName',
-                    type: 'input',
-                    message: 'What is the first name of your employee?'
+        const questions = [
+            {
+                name: 'employeeFirstName',
+                type: 'input',
+                message: 'What is the first name of your employee?'
+            },
+            {
+                name: 'employeeLastName',
+                type: 'input',
+                message: 'What is the last name of your employee?'
+            },
+            {
+                name: 'employeeRole',
+                type: 'rawlist',
+                choices() {
+                    let choiceArray = [];
+                    roleResults.forEach(({ title, id }) => {
+                        choiceArray.push({ name: title, value: id });
+                    });
+                    return choiceArray;
                 },
-                {
-                    name: 'employeeLastName',
-                    type: 'input',
-                    message: 'What is the last name of your employee?'
-                },
-                {
-                    name: 'employeeRole',
+                message: 'What is the employees role?',
+            },
+        ];
+        connection.query('SELECT * FROM employee', (err, employeeResults) => {
+            if (err) throw err;
+            // Prompt to store information from the user
+            if (employeeResults.length > 0) {
+                questions.push({
+                    name: 'employeeManager',
                     type: 'rawlist',
                     choices() {
                         let choiceArray = [];
-                        results.forEach(({ title }) => {
-                            choiceArray.push(title);
+                        employeeResults.forEach(({ first_name, last_name, id }) => {
+                            choiceArray.push({ name: `${first_name} ${last_name}`, value: id });
                         });
                         return choiceArray;
                     },
-                    message: 'What is the employees role?',
-                },
-                {
-                    name: 'employeeManager',
-                    type: 'input',
                     message: 'Who is the new employee manager?',
-                },
-            ])
-            .then((answer) => {
-                // When finished prompting, insert the new item into the db table
-                connection.query(
-                    'INSERT INTO employee SET ?',
-                    {
-                        first_name: answer.employeeFirstName,
-                        last_name: answer.employeeLastName,
-                        role_id: answer.employeeRole,
-                        manager_id: answer.employeeManager,
-                    },
-                    (err) => {
-                        if (err) throw err;
-                        console.log('Your new employee was successfully created');
-                        // Prompt the starting questions to the user
-                        start();
-                    }
-                );
-            });
+                })
+            }
+            inquirer
+                .prompt(questions)
+                .then((answer) => {
+                    // When finished prompting, insert the new item into the db table
+                    connection.query(
+                        'INSERT INTO employee SET ?',
+                        {
+                            first_name: answer.employeeFirstName,
+                            last_name: answer.employeeLastName,
+                            role_id: answer.employeeRole,
+                            manager_id: answer.employeeManager,
+                        },
+                        (err) => {
+                            if (err) throw err;
+                            console.log('Your new employee was successfully created');
+                            // Prompt the starting questions to the user
+                            start();
+                        }
+                    );
+                });
+        });
     });
 };
 
 // Function to handle with the update EMPLOYEE ROLE choice
 const employeeAuctionUpdate = () => {
-    //query the database for all items being auctioned
+    // Prompt to store information from the user
     connection.query('SELECT * FROM employee', (err, results) => {
         if (err) throw err;
-
-        // Prompt to store information from the user
         inquirer
-            .prompt([
+            .prompt(
                 {
-                    name: 'updateEmployee',
+                    name: 'employeeNameUpdate',
                     type: 'rawlist',
                     choices() {
                         let choiceArray = [];
-                        results.forEach(({ first_name }) => {
-                            choiceArray.push(first_name);
+                        results.forEach(({ first_name, id }) => {
+                            choiceArray.push({ name: first_name, value: id });
                         });
                         return choiceArray;
                     },
-                    message: 'Please select the employee that you want to update',
+                    message: 'What is the employee that you want to update the role',
                 },
+            )
+            .then((answerOne) => {
+                // console.log(answer);
+                connection.query('SELECT * FROM role', (err, results) => {
+                    if (err) throw err;
+                    inquirer
+                        .prompt(
+                            {
+                                name: 'employeeRoleUpdate',
+                                type: 'rawlist',
+                                choices() {
+                                    let choiceArray = [];
+                                    results.forEach(({ title, id }) => {
+                                        choiceArray.push({ name: title, value: id });
+                                    });
+                                    return choiceArray;
+                                },
+                                message: 'Which role do you want your employee to have?',
+                            },
+                        )
+                        .then((answerTwo) => {
+                            connection.query(
+                                'UPDATE employee SET role_id = ? WHERE id = ?',
+                                [
+                                    answerTwo.employeeRoleUpdate,
+                                    answerOne.employeeNameUpdate
+                                ],
+                                (err) => {
+                                    if (err) throw err;
+                                    console.log('Your new employee was successfully created');
+                                    // Prompt the starting questions to the user
+                                    start();
+                                }
+                            );
+                        })
+                })
 
-            ])
-            .then((answer) => {
-                // When finished prompting, insert the new item into the db table
-                connection.query(
-                    'INSERT INTO employee SET ?',
-                    {
-                        name: answer.updateEmployee,
-                    },
-                    {
-                        role_id: answer.employeeNewRole,
-                    },
-                    (err) => {
-                        if (err) throw err;
-                        console.log('Your employees role was successfully updated');
-                        // Prompt the starting questions to the user
-                        start();
-                    }
-                );
+
             });
     });
 };
